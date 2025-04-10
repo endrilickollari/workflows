@@ -35,8 +35,8 @@ The application follows a clean, modular architecture separating concerns:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/user-management-api.git
-cd user-management-api
+git clone https://github.com/yourusername/workflows.git
+cd workflows
 ```
 
 2. Install dependencies:
@@ -98,7 +98,3 @@ bun run lint:fix
 # Format code with Prettier
 bun run format
 ```
-
-## License
-
-This project is licensed under the MIT License.
