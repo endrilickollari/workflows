@@ -1,19 +1,39 @@
 {
   "name": "workflows",
-  "module": "index.ts",
+  "version": "1.0.0",
+  "module": "src/index.ts",
   "type": "module",
-  "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/bun": "latest",
-    "drizzle-kit": "^0.30.6"
-  },
-  "peerDependencies": {
-    "typescript": "^5.8.3"
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun run src/db/migrate.ts",
+    "db:setup": "bun run src/db/setup.ts"
   },
   "dependencies": {
-    "better-auth": "^1.2.5",
+    "@elysiajs/cookie": "^0.8.0",
+    "@elysiajs/cors": "1.2.0",
+    "@elysiajs/jwt": "1.2.0",
+    "@elysiajs/swagger": "1.2.2",
+    "better-auth": "^1.0.0",
     "better-sqlite3": "^11.9.1",
-    "drizzle-orm": "^0.41.0",
-    "elysia": "^1.2.25"
+    "drizzle-orm": "0.41.0",
+    "elysia": "1.2.25",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.5",
+    "@typescript-eslint/eslint-plugin": "8.29.1",
+    "@typescript-eslint/parser": "8.29.1",
+    "bun-types": "latest",
+    "drizzle-kit": "0.30.6",
+    "eslint": "9.24.0",
+    "eslint-config-prettier": "10.1.2",
+    "eslint-plugin-prettier": "^5.0.1",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.2"
   }
 }
