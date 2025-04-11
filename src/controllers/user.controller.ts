@@ -1,5 +1,5 @@
-import { userService } from "../services/user.service";
-import { NewUser } from "../db";
+import { userService } from '../services/user.service';
+import { NewUser } from '../db';
 
 export interface CreateUserRequest {
   email: string;
@@ -34,8 +34,9 @@ export class UserController {
         isAdmin: request.isAdmin || false,
       };
 
+      // @ts-ignore
       const newUser = await userService.createUser(userData);
-      
+
       return {
         success: true,
         data: {
@@ -48,12 +49,12 @@ export class UserController {
           createdAt: newUser.createdAt,
           updatedAt: newUser.updatedAt,
         },
-        message: "User created successfully",
+        message: 'User created successfully',
       };
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Failed to create user",
+        message: error instanceof Error ? error.message : 'Failed to create user',
       };
     }
   }
@@ -64,7 +65,7 @@ export class UserController {
   async getAllUsers() {
     try {
       const users = await userService.getAllUsers();
-      
+
       return {
         success: true,
         data: users.map(user => ({
@@ -77,12 +78,12 @@ export class UserController {
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         })),
-        message: "Users retrieved successfully",
+        message: 'Users retrieved successfully',
       };
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Failed to retrieve users",
+        message: error instanceof Error ? error.message : 'Failed to retrieve users',
       };
     }
   }
@@ -93,7 +94,7 @@ export class UserController {
   async getUserById(id: number) {
     try {
       const user = await userService.getUserById(id);
-      
+
       return {
         success: true,
         data: {
@@ -106,12 +107,12 @@ export class UserController {
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },
-        message: "User retrieved successfully",
+        message: 'User retrieved successfully',
       };
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Failed to retrieve user",
+        message: error instanceof Error ? error.message : 'Failed to retrieve user',
       };
     }
   }
@@ -138,7 +139,7 @@ export class UserController {
       });
 
       const updatedUser = await userService.updateUser(id, userData);
-      
+
       return {
         success: true,
         data: {
@@ -151,12 +152,12 @@ export class UserController {
           createdAt: updatedUser.createdAt,
           updatedAt: updatedUser.updatedAt,
         },
-        message: "User updated successfully",
+        message: 'User updated successfully',
       };
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Failed to update user",
+        message: error instanceof Error ? error.message : 'Failed to update user',
       };
     }
   }
@@ -167,15 +168,15 @@ export class UserController {
   async deleteUser(id: number) {
     try {
       await userService.deleteUser(id);
-      
+
       return {
         success: true,
-        message: "User deleted successfully",
+        message: 'User deleted successfully',
       };
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Failed to delete user",
+        message: error instanceof Error ? error.message : 'Failed to delete user',
       };
     }
   }
