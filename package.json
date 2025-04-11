@@ -18,13 +18,14 @@
     "@elysiajs/cors": "1.2.0",
     "@elysiajs/jwt": "1.2.0",
     "@elysiajs/swagger": "1.2.2",
-    "better-auth": "^1.0.0",
+    "better-auth": "^1.2.5",
     "better-sqlite3": "^11.9.1",
     "drizzle-orm": "0.41.0",
     "elysia": "1.2.25",
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@better-auth/cli": "^1.2.5",
     "@types/better-sqlite3": "^7.6.5",
     "@typescript-eslint/eslint-plugin": "8.29.1",
     "@typescript-eslint/parser": "8.29.1",
