@@ -1,5 +1,5 @@
-import { authService } from "../services/auth.service";
-import { NewUser } from "../db";
+import { authService } from '../services/auth.service';
+import { NewUser } from '../db';
 
 export interface SignupRequest {
   email: string;
@@ -29,16 +29,16 @@ export class AuthController {
       };
 
       const newUser = await authService.signup(userData);
-      
+
       return {
         success: true,
         data: newUser,
-        message: "User registered successfully",
+        message: 'User registered successfully',
       };
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Failed to register user",
+        message: error instanceof Error ? error.message : 'Failed to register user',
       };
     }
   }
@@ -49,11 +49,11 @@ export class AuthController {
   async login(request: LoginRequest, generateToken: (payload: object) => string) {
     try {
       const user = await authService.login(request.email, request.password);
-      
+
       if (!user) {
         return {
           success: false,
-          message: "Invalid email or password",
+          message: 'Invalid email or password',
         };
       }
 
@@ -75,12 +75,12 @@ export class AuthController {
             plan: user.plan,
           },
         },
-        message: "Login successful",
+        message: 'Login successful',
       };
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Login failed",
+        message: error instanceof Error ? error.message : 'Login failed',
       };
     }
   }

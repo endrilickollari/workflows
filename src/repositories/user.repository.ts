@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
-import { db, users, User, NewUser } from "../db";
+import { eq } from 'drizzle-orm';
+import { db, users, User, NewUser } from '../db';
 
 export class UserRepository {
   /**
