@@ -1,5 +1,6 @@
 import { userService } from '../services/user.service';
 import { NewUser } from '../db';
+import { USER_PLANS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../utils/constants';
 
 export interface CreateUserRequest {
   email: string;
@@ -25,16 +26,23 @@ export class UserController {
    */
   async createUser(request: CreateUserRequest) {
     try {
+      // Validate plan if provided
+      if (request.plan && !Object.values(USER_PLANS).includes(request.plan)) {
+        return {
+          success: false,
+          message: ERROR_MESSAGES.INVALID_PLAN,
+        };
+      }
+
       const userData: Partial<NewUser> = {
         email: request.email,
         password: request.password,
         firstName: request.firstName,
         lastName: request.lastName,
-        plan: request.plan,
+        plan: request.plan || USER_PLANS.FREE,
         isAdmin: request.isAdmin || false,
       };
 
-      // @ts-ignore
       const newUser = await userService.createUser(userData);
 
       return {
@@ -49,12 +57,12 @@ export class UserController {
           createdAt: newUser.createdAt,
           updatedAt: newUser.updatedAt,
         },
-        message: 'User created successfully',
+        message: SUCCESS_MESSAGES.USER_CREATED,
       };
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to create user',
+        message: error instanceof Error ? error.message : ERROR_MESSAGES.USER_EXISTS,
       };
     }
   }
@@ -112,7 +120,7 @@ export class UserController {
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to retrieve user',
+        message: error instanceof Error ? error.message : ERROR_MESSAGES.USER_NOT_FOUND,
       };
     }
   }
@@ -122,6 +130,14 @@ export class UserController {
    */
   async updateUser(id: number, request: UpdateUserRequest) {
     try {
+      // Validate plan if provided
+      if (request.plan && !Object.values(USER_PLANS).includes(request.plan)) {
+        return {
+          success: false,
+          message: ERROR_MESSAGES.INVALID_PLAN,
+        };
+      }
+
       const userData: Partial<NewUser> = {
         email: request.email,
         password: request.password,
@@ -131,7 +147,7 @@ export class UserController {
         isAdmin: request.isAdmin,
       };
 
-      // Remove undefined properties
+      // Filter out undefined properties
       Object.keys(userData).forEach(key => {
         if (userData[key as keyof typeof userData] === undefined) {
           delete userData[key as keyof typeof userData];
@@ -152,7 +168,7 @@ export class UserController {
           createdAt: updatedUser.createdAt,
           updatedAt: updatedUser.updatedAt,
         },
-        message: 'User updated successfully',
+        message: SUCCESS_MESSAGES.USER_UPDATED,
       };
     } catch (error) {
       return {
@@ -171,7 +187,7 @@ export class UserController {
 
       return {
         success: true,
-        message: 'User deleted successfully',
+        message: SUCCESS_MESSAGES.USER_DELETED,
       };
     } catch (error) {
       return {

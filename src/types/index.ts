@@ -1,4 +1,4 @@
-import { User } from "../db";
+import { User } from '../db';
 
 /**
  * Authentication related types
@@ -34,7 +34,7 @@ export interface AuthResponse {
  */
 
 // Sanitized user (for sending in responses, without sensitive data)
-export type SanitizedUser = Omit<User, "password">;
+export type SanitizedUser = Omit<User, 'password'>;
 
 // User creation request
 export interface CreateUserDto {

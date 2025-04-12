@@ -1,31 +1,31 @@
-import { sql } from "drizzle-orm";
-import { text, integer, sqliteTable } from "drizzle-orm/sqlite-core";
+import { sql } from 'drizzle-orm';
+import { text, integer, sqliteTable } from 'drizzle-orm/sqlite-core';
 
 // Define the user plans as an enum
 export const UserPlan = {
-  FREE: "Free",
-  BASIC: "Basic",
-  PREMIUM: "Premium",
+  FREE: 'Free',
+  BASIC: 'Basic',
+  PREMIUM: 'Premium',
 } as const;
-export type UserPlan = typeof UserPlan[keyof typeof UserPlan];
+export type UserPlan = (typeof UserPlan)[keyof typeof UserPlan];
 
 // User table schema
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(), // Note: should be hashed in the implementation
-  firstName: text("first_name"),
-  lastName: text("last_name"),
-  plan: text("plan", { enum: Object.values(UserPlan) as [string, ...string[]] })
+export const users = sqliteTable('users', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  email: text('email').notNull().unique(),
+  password: text('password').notNull(), // Note: should be hashed in the implementation
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  plan: text('plan', { enum: Object.values(UserPlan) as [string, ...string[]] })
     .notNull()
     .default(UserPlan.FREE),
-  isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
-  createdAt: text("created_at")
+  isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at')
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text("updated_at")
+  updatedAt: text('updated_at')
     .notNull()
-    .default(sql`CURRENT_TIMESTAMP`)
+    .default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Export types for the schema
