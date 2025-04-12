@@ -1,16 +1,18 @@
-import { userRepository } from "../repositories/user.repository";
-import { NewUser } from "../db";
-import { hashPassword, comparePasswords } from "../utils/password";
+import { userRepository } from '../repositories/user.repository';
+import { NewUser } from '../db';
+import { hashPassword, comparePasswords } from '../utils/password';
 
 export class AuthService {
   /**
    * Register a new user
    */
-  async signup(userData: Omit<NewUser, "isAdmin" | "createdAt" | "updatedAt">): Promise<{ id: number; email: string }> {
+  async signup(
+    userData: Omit<NewUser, 'isAdmin' | 'createdAt' | 'updatedAt'>
+  ): Promise<{ id: number; email: string }> {
     // Check if user already exists
     const existingUser = await userRepository.findByEmail(userData.email);
     if (existingUser) {
-      throw new Error("User with this email already exists");
+      throw new Error('User with this email already exists');
     }
 
     // Hash the password
@@ -32,7 +34,10 @@ export class AuthService {
   /**
    * Authenticate a user
    */
-  async login(email: string, password: string): Promise<{ id: number; email: string; plan: string; isAdmin: boolean } | null> {
+  async login(
+    email: string,
+    password: string
+  ): Promise<{ id: number; email: string; plan: string; isAdmin: boolean } | null> {
     // Find the user
     const user = await userRepository.findByEmail(email);
     if (!user) {

@@ -1,16 +1,16 @@
-import { userRepository } from "../repositories/user.repository";
-import { User, NewUser, UserPlan } from "../db";
-import { hashPassword } from "../utils/password";
+import { userRepository } from '../repositories/user.repository';
+import { User, NewUser, UserPlan } from '../db';
+import { hashPassword } from '../utils/password';
 
 export class UserService {
   /**
    * Create a new user (admin operation)
    */
-  async createUser(userData: Omit<NewUser, "createdAt" | "updatedAt">): Promise<User> {
+  async createUser(userData: Omit<NewUser, 'createdAt' | 'updatedAt'>): Promise<User> {
     // Check if user already exists
     const existingUser = await userRepository.findByEmail(userData.email);
     if (existingUser) {
-      throw new Error("User with this email already exists");
+      throw new Error('User with this email already exists');
     }
 
     // Hash the password
@@ -36,7 +36,7 @@ export class UserService {
   async getUserById(id: number): Promise<User> {
     const user = await userRepository.findById(id);
     if (!user) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
     return user;
   }
@@ -44,11 +44,14 @@ export class UserService {
   /**
    * Update user (admin operation)
    */
-  async updateUser(id: number, userData: Partial<Omit<NewUser, "createdAt" | "updatedAt">>): Promise<User> {
+  async updateUser(
+    id: number,
+    userData: Partial<Omit<NewUser, 'createdAt' | 'updatedAt'>>
+  ): Promise<User> {
     // Check if user exists
     const existingUser = await userRepository.findById(id);
     if (!existingUser) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
 
     // If password is being updated, hash it
@@ -59,13 +62,13 @@ export class UserService {
 
     // Validate plan if it's being updated
     if (userData.plan && !Object.values(UserPlan).includes(userData.plan as UserPlan)) {
-      throw new Error("Invalid plan type");
+      throw new Error('Invalid plan type');
     }
 
     // Update user
     const updatedUser = await userRepository.update(id, dataToUpdate);
     if (!updatedUser) {
-      throw new Error("Failed to update user");
+      throw new Error('Failed to update user');
     }
 
     return updatedUser;
@@ -78,13 +81,13 @@ export class UserService {
     // Check if user exists
     const existingUser = await userRepository.findById(id);
     if (!existingUser) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
 
     // Delete user
     const result = await userRepository.delete(id);
     if (!result) {
-      throw new Error("Failed to delete user");
+      throw new Error('Failed to delete user');
     }
   }
 }

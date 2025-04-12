@@ -1,54 +1,102 @@
-import { Elysia } from "elysia";
-import { jwt } from "@elysiajs/jwt";
+import { Elysia } from 'elysia';
+import { auth } from '@/libs/auth/auth';
+import { User, Session } from 'better-auth/types';
 
-// JWT configuration
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"; // Use environment variable in production
+// Create a plugin for authentication middleware
+export const authMiddleware = new Elysia({ name: 'auth-middleware' })
+  .derive({ as: 'global' }, async ({ request, set, cookie }) => {
+    // Function to get current session
+    const getSession = async () => {
+      try {
+        const session = await auth.api.getSession({
+          headers: request.headers,
+        });
 
-// Authentication middleware
-export const authMiddleware = new Elysia()
-  .use(
-    jwt({
-      name: "jwt",
-      secret: JWT_SECRET,
-    })
-  )
-  .derive({as: 'global'}, ({ jwt, set, headers }) => {
+        if (!session) {
+          return {
+            success: false,
+            message: 'Unauthorized: Not authenticated',
+            user: null,
+            session: null,
+          };
+        }
+
+        return {
+          success: true,
+          user: session.user,
+          session: session.session,
+        };
+      } catch (error) {
+        console.error('Session error:', error);
+        return {
+          success: false,
+          message: 'Error retrieving session',
+          user: null,
+          session: null,
+        };
+      }
+    };
+
+    // Function to require authentication
+    const requireAuth = async () => {
+      const sessionResult = await getSession();
+
+      if (!sessionResult.success) {
+        set.status = 401;
+        return sessionResult;
+      }
+
+      return sessionResult;
+    };
+
+    // Function to require admin privileges
+    const requireAdmin = async () => {
+      const sessionResult = await requireAuth();
+
+      if (!sessionResult.success) {
+        return sessionResult;
+      }
+
+      // Check if user has admin privileges
+      // if (!sessionResult.user.isAdmin) {
+      //   set.status = 403;
+      //   return {
+      //     success: false,
+      //     message: "Forbidden: Admin access required",
+      //     user: null,
+      //     session: null,
+      //   };
+      // }
+
+      return sessionResult;
+    };
+
     return {
-      // Middleware to verify JWT token
-      verifyToken: async () => {
-        // Get token from Authorization header
-        const authHeader = headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-          set.status = 401;
-          return { success: false, message: "Unauthorized: No token provided" };
-        }
-
-        const token = authHeader.split(" ")[1];
-        const payload = await jwt.verify(token);
-
-        if (!payload) {
-          set.status = 401;
-          return { success: false, message: "Unauthorized: Invalid token" };
-        }
-
-        return { success: true, user: payload };
-      },
-
-      // Middleware to verify admin permissions
-      verifyAdmin: async () => {
-        const tokenResult = await jwt.verify(headers.authorization?.split(" ")[1] || "");
-        
-        if (!tokenResult) {
-          set.status = 401;
-          return { success: false, message: "Unauthorized: Invalid token" };
-        }
-
-        if (!tokenResult.isAdmin) {
-          set.status = 403;
-          return { success: false, message: "Forbidden: Admin access required" };
-        }
-
-        return { success: true, user: tokenResult };
-      },
+      getSession,
+      requireAuth,
+      requireAdmin,
     };
   });
+
+// Type for authenticated context
+export type AuthenticatedContext = {
+  user: User;
+  session: Session;
+};
+
+// Helper to extract user info for response
+export const userInfo = (user: User | null) => {
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    // firstName: user.firstName,
+    // lastName: user.lastName,
+    // plan: user.plan,
+    // isAdmin: user.isAdmin,
+    image: user.image,
+    emailVerified: user.emailVerified,
+  };
+};
