@@ -2,19 +2,11 @@
  * Application constants
  */
 
-// User plans
-export const USER_PLANS = {
-  FREE: 'Free',
-  BASIC: 'Basic',
-  PREMIUM: 'Premium',
-};
-
 // Error messages
 export const ERROR_MESSAGES = {
   USER_EXISTS: 'User with this email already exists',
   USER_NOT_FOUND: 'User not found',
   INVALID_CREDENTIALS: 'Invalid email or password',
-  INVALID_PLAN: 'Invalid plan type',
   UNAUTHORIZED: "Unauthorized: You don't have permission to access this resource",
 };
 
@@ -29,6 +21,5 @@ export const SUCCESS_MESSAGES = {
 
 // API defaults
 export const API_DEFAULTS = {
-  DEFAULT_PLAN: USER_PLANS.FREE,
   JWT_EXPIRY: '24h', // Token expiry time
 };

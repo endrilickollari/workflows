@@ -1,12 +1,16 @@
-import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { Database } from 'bun:sqlite';
-import * as schema from './schema';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import { users, type User, type NewUser } from '../libs/auth/schema';
 
-// Create a new SQLite database connection using Bun's built-in SQLite
-const sqlite = new Database('data.db');
+// Create Postgres client with neon.tech serverless postgres
+const connectionString = process.env.DATABASE_URL || 
+  'postgresql://neondb_owner:npg_SFgdyKq1mk3x@ep-crimson-rice-a585j8zw-pooler.us-east-2.aws.neon.tech/workflows_local?sslmode=require';
 
-// Create a Drizzle instance with the database and schema
-export const db = drizzle(sqlite, { schema });
+const client = postgres(connectionString);
+export const db = drizzle(client);
 
-// Export schema types for convenience
-export * from './schema';
+// Export types
+export type { User, NewUser };
+
+// Export schema
+export { users };

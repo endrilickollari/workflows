@@ -178,3 +178,7 @@ src/db/migrations/0000_absent_sebastian_shaw.sql
 src/db/migrations/migrations.js
 src/db/migrations/meta/_journal.json
 src/db/migrations/meta/0000_snapshot.json
+
+# Drizzle
+drizzle/.snapshot
+drizzle/migrations/*.sql

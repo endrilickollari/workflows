@@ -1,52 +1,46 @@
-/**
- * Database diagnosis tool - helps debug data type issues
- */
-import { Database } from 'bun:sqlite';
+// /**
+//  * Database diagnosis tool - helps debug data type issues
+//  */
+// import { db } from '../db';
+// import { sql } from 'drizzle-orm';
 
-/**
- * Print detailed information about the database schema and contents
- */
-export function diagnoseBetterAuthDb(): void {
-  const db = new Database('data.db', { readonly: true });
+// /**
+//  * Print detailed information about the database schema and contents
+//  */
+// export async function diagnoseBetterAuthDb(): Promise<void> {
+//   console.log('Checking database structure:');
   
-  try {
-    // 1. Get list of all tables
-    console.log('Checking database structure:');
-    const tables = db.query("SELECT name FROM sqlite_master WHERE type='table'").all() as {name: string}[];
-    console.log(`Found ${tables.length} tables: ${tables.map(t => t.name).join(', ')}`);
+//   try {
+//     // Check BetterAuth tables with the standard table names
+//     const betterAuthTables = ['user', 'session', 'account', 'verification'];
     
-    // 2. Check each BetterAuth table
-    const betterAuthTables = ['ba_users', 'ba_sessions', 'ba_accounts', 'ba_verifications'];
-    for (const tableName of betterAuthTables) {
-      if (!tables.some(t => t.name === tableName)) {
-        console.log(`⚠️ Table ${tableName} does not exist!`);
-        continue;
-      }
+//     for (const tableName of betterAuthTables) {
+//       console.log(`\nExamining ${tableName}:`);
       
-      // 2a. Show table schema
-      const schema = db.query(`PRAGMA table_info(${tableName})`).all();
-      console.log(`\nSchema for ${tableName}:`);
-      console.table(schema);
-      
-      // 2b. Count rows
-      const count = db.query(`SELECT COUNT(*) as count FROM ${tableName}`).get() as {count: number};
-      console.log(`Table ${tableName} has ${count.count} rows`);
-      
-      // 2c. Show sample data (first 3 rows)
-      if (count.count > 0) {
-        const rows = db.query(`SELECT * FROM ${tableName} LIMIT 3`).all();
-        console.log(`Sample data from ${tableName}:`);
-        console.log(rows);
-      }
-    }
-  } finally {
-    db.close();
-  }
-}
+//       try {
+//         // Count rows
+//         const result = await db.execute(sql`SELECT COUNT(*) as count FROM ${sql.identifier(tableName)}`);
+//         console.log(`Table ${tableName} has ${result[0].count} rows`);
+        
+//         // Sample data
+//         if (result[0].count > 0) {
+//           const rows = await db.execute(sql`SELECT * FROM ${sql.identifier(tableName)} LIMIT 3`);
+//           console.log(`Sample data from ${tableName}:`);
+//           console.log(rows);
+//         }
+//       } catch (error) {
+//         console.error(`Error examining table ${tableName}:`, error);
+//       }
+//     }
+//   } catch (error) {
+//     console.error('Error during database diagnosis:', error);
+//   }
+// }
 
-// If run directly, execute the diagnosis
-if (import.meta.main) {
-  console.log('Running database diagnosis...');
-  diagnoseBetterAuthDb();
-  console.log('\nDiagnosis complete');
-}
+// // If run directly, execute the diagnosis
+// if (import.meta.main) {
+//   console.log('Running database diagnosis...');
+//   diagnoseBetterAuthDb()
+//     .then(() => console.log('\nDiagnosis complete'))
+//     .catch(err => console.error('Diagnosis failed:', err));
+// }

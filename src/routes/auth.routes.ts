@@ -1,16 +1,12 @@
 import { Elysia, t } from 'elysia';
-import { auth } from '../libs/auth/auth' ;
-import { userInfo } from '../middleware/auth';
+import { auth } from '../libs/auth/auth';
 
 // Define response schemas for Swagger documentation
 const userResponseSchema = t.Object({
   id: t.String({ description: 'User ID' }),
   email: t.String({ description: 'User email address' }),
-  firstName: t.Optional(t.String({ description: 'User first name' })),
-  lastName: t.Optional(t.String({ description: 'User last name' })),
   name: t.String({ description: 'User display name' }),
   emailVerified: t.Boolean({ description: 'Email verification status' }),
-  plan: t.Optional(t.String({ description: 'User subscription plan' })),
   image: t.Optional(t.Union([t.String(), t.Null()], { description: 'User profile image URL' })),
 });
 
@@ -20,12 +16,10 @@ const authResponseSchema = t.Object({
   data: t.Optional(t.Object({
     user: t.Optional(userResponseSchema),
     token: t.Optional(t.String({ description: 'Authentication token' })),
-    redirect: t.Optional(t.Boolean({ description: 'Redirect flag' })),
-    url: t.Optional(t.String({ description: 'Redirect URL' })),
   })),
 });
 
-// Auth routes for all authentication methods
+// Auth routes for email/password authentication
 export const authRoutes = new Elysia({ prefix: '/api/auth' })
   // Email signup
   .post('/sign-up/email',
@@ -36,46 +30,35 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
           name: body.name || body.email.split('@')[0] // Use part of email as fallback name
         });
         
-        try {
-          // Create a properly formatted body with required fields
-          const authBody = {
-            email: body.email,
-            password: body.password,
-            name: body.name || body.email.split('@')[0], // Default name if not provided
-            // Include optional fields if needed
-            firstName: body.firstName,
-            lastName: body.lastName,
-            plan: body.plan
-          };
-          
-          // Use BetterAuth for signup
-          const result = await auth.api.signUpEmail({
-            body: authBody,
-          });
+        // Create a properly formatted body with required fields
+        const authBody = {
+          email: body.email,
+          password: body.password,
+          name: body.name || body.email.split('@')[0], // Default name if not provided
+          image: body.image
+        };
+        
+        // Use BetterAuth for signup
+        const result = await auth.api.signUpEmail({
+          body: authBody,
+        });
 
-          console.log('User created successfully with BetterAuth:', result.user?.id);
-          
-          return {
-            success: true,
-            message: 'User registered successfully',
-            data: {
-              user: result.user ? {
-                id: result.user.id,
-                email: result.user.email,
-                name: result.user.name,
-                image: result.user.image,
-                emailVerified: result.user.emailVerified,
-              } : undefined,
-              token: result.token || undefined,
-            },
-          };
-        } catch (error) {
-          // Log the error
-          console.error('BetterAuth signup error:', error);
-          
-          // Re-throw the error to be handled by the outer catch block
-          throw error;
-        }
+        console.log('User created successfully with BetterAuth:', result.user?.id);
+        
+        return {
+          success: true,
+          message: 'User registered successfully',
+          data: {
+            user: result.user ? {
+              id: result.user.id,
+              email: result.user.email,
+              name: result.user.name,
+              image: result.user.image,
+              emailVerified: result.user.emailVerified,
+            } : undefined,
+            token: result.token || undefined,
+          },
+        };
       } catch (error: any) {
         console.error('Signup failed:', error);
         set.status = error.status || 400;
@@ -90,9 +73,7 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
         email: t.String({ format: 'email', description: 'User email address' }),
         password: t.String({ minLength: 8, description: 'User password' }),
         name: t.Optional(t.String({ description: 'User display name' })),
-        firstName: t.Optional(t.String({ description: 'User first name' })),
-        lastName: t.Optional(t.String({ description: 'User last name' })),
-        plan: t.Optional(t.String({ description: 'User subscription plan' })),
+        image: t.Optional(t.String({ description: 'User profile image URL' })),
       }),
       response: authResponseSchema,
       detail: {
@@ -102,7 +83,7 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
       },
     },
   )
-
+  
   // Email login
   .post('/sign-in/email',
     async ({ body, set }) => {
@@ -111,7 +92,6 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
           body: {
             email: body.email,
             password: body.password,
-            callbackURL: body.callbackURL,
             rememberMe: body.rememberMe,
           },
         });
@@ -124,15 +104,10 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
               id: result.user.id,
               email: result.user.email,
               name: result.user.name,
-              // firstName: result.user.firstName,
-              // lastName: result.user.lastName,
-              // plan: result.user.plan,
               image: result.user.image,
               emailVerified: result.user.emailVerified,
             } : undefined,
-            token: result.token,
-            redirect: result.redirect,
-            url: result.url,
+            token: result.token
           },
         };
       } catch (error: any) {
@@ -148,7 +123,6 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
       body: t.Object({
         email: t.String({ format: 'email', description: 'User email address' }),
         password: t.String({ description: 'User password' }),
-        callbackURL: t.Optional(t.String({ description: 'URL to redirect after login' })),
         rememberMe: t.Optional(t.Boolean({ description: 'Remember login session' })),
       }),
       response: authResponseSchema,
@@ -159,195 +133,7 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
       },
     },
   )
-
-  // Google OAuth sign-in
-  .post('/sign-in/google',
-    async ({ body, set }) => {
-      try {
-        const result = await auth.api.signInSocial({
-          body: {
-            provider: 'google',
-            callbackURL: body.callbackURL,
-            disableRedirect: body.disableRedirect,
-            scopes: body.scopes,
-          },
-        });
-
-        if (result.redirect) {
-          return {
-            success: true,
-            message: 'Redirecting to Google authentication',
-            data: {
-              redirect: true,
-              url: result.url,
-            },
-          };
-        }
-
-        return {
-          success: true,
-          message: "Login successful",
-          data: {
-            user: 'user' in result && result.user ? {
-              id: result.user.id,
-              email: result.user.email,
-              name: result.user.name,
-              // firstName: result.user.firstName,
-              // lastName: result.user.lastName,
-              // plan: result.user.plan,
-              image: result.user.image,
-              emailVerified: result.user.emailVerified,
-            } : undefined,
-            token: 'token' in result ? result.token : undefined
-          }
-        };
-      } catch (error: any) {
-        console.error('Google auth error:', error);
-        set.status = error.status || 500;
-        return {
-          success: false,
-          message: error.message || 'Google authentication failed',
-        };
-      }
-    },
-    {
-      body: t.Object({
-        callbackURL: t.Optional(t.String({ description: 'URL to redirect after authentication' })),
-        disableRedirect: t.Optional(t.Boolean({ description: 'Return URL instead of redirecting' })),
-        scopes: t.Optional(t.Array(t.String(), { description: 'OAuth scopes to request' })),
-      }),
-      response: authResponseSchema,
-      detail: {
-        summary: 'Google Sign In',
-        description: 'Authenticate with Google OAuth',
-        tags: ['Authentication'],
-      },
-    },
-  )
-
-  // GitHub OAuth sign-in
-  .post('/sign-in/github',
-    async ({ body, set }) => {
-      try {
-        const result = await auth.api.signInSocial({
-          body: {
-            provider: 'github',
-            callbackURL: body.callbackURL,
-            disableRedirect: body.disableRedirect,
-            scopes: body.scopes,
-          },
-        });
-
-        if (result.redirect) {
-          return {
-            success: true,
-            message: 'Redirecting to GitHub authentication',
-            data: {
-              redirect: true,
-              url: result.url,
-            },
-          };
-        }
-
-        return {
-          success: true,
-          message: "Login successful",
-          data: {
-            user: 'user' in result && result.user ? {
-              id: result.user.id,
-              email: result.user.email,
-              name: result.user.name,
-              // firstName: result.user.firstName,
-              // lastName: result.user.lastName,
-              // plan: result.user.plan,
-              image: result.user.image,
-              emailVerified: result.user.emailVerified,
-            } : undefined,
-            token: 'token' in result ? result.token : undefined
-          }
-        };
-      } catch (error: any) {
-        console.error('GitHub auth error:', error);
-        set.status = error.status || 500;
-        return {
-          success: false,
-          message: error.message || 'GitHub authentication failed',
-        };
-      }
-    },
-    {
-      body: t.Object({
-        callbackURL: t.Optional(t.String({ description: 'URL to redirect after authentication' })),
-        disableRedirect: t.Optional(t.Boolean({ description: 'Return URL instead of redirecting' })),
-        scopes: t.Optional(t.Array(t.String(), { description: 'OAuth scopes to request' })),
-      }),
-      response: authResponseSchema,
-      detail: {
-        summary: 'GitHub Sign In',
-        description: 'Authenticate with GitHub OAuth',
-        tags: ['Authentication'],
-      },
-    },
-  )
-
-  .get("/session",
-    async ({ request, set }) => {
-      try {
-        const session = await auth.api.getSession({
-          headers: request.headers,
-        });
-
-        if (!session) {
-          return {
-            success: false,
-            message: "No active session",
-          };
-        }
-
-        return {
-          success: true,
-          message: "Session retrieved",
-          data: {
-            user: session.user ? {
-              id: session.user.id,
-              email: session.user.email,
-              name: session.user.name,
-              // firstName: session.user.firstName,
-              // lastName: session.user.lastName,
-              // plan: session.user.plan,
-              image: session.user.image,
-              emailVerified: session.user.emailVerified,
-            } : undefined,
-            session: {
-              id: session.session.id,
-              expiresAt: session.session.expiresAt,
-              userId: session.session.userId,
-              createdAt: session.session.createdAt,
-              updatedAt: session.session.updatedAt,
-              token: session.session.token
-            }
-          }
-        };
-      } catch (error: any) {
-        console.error("Session error:", error);
-        set.status = error.status || 401;
-        return {
-          success: false,
-          message: error.message || "Failed to retrieve session",
-        };
-      }
-    },
-    {
-      response: authResponseSchema,
-      detail: {
-        summary: 'Get Session',
-        description: 'Get the current user session',
-        tags: ['Authentication'],
-        security: [{ CookieAuth: [] }],
-      },
-    },
-  )
-
+  
   // Sign out
   .post('/sign-out',
     async ({ request, set }) => {
@@ -383,190 +169,52 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
     },
   )
 
-  // Reset password request
-  .post('/forget-password',
-    async ({ body, set }) => {
+  // Get session
+  .get('/session',
+    async ({ request, set }) => {
       try {
-        const result = await auth.api.forgetPassword({
-          body: {
-            email: body.email,
-            redirectTo: body.redirectTo,
-          },
+        const session = await auth.api.getSession({
+          headers: request.headers,
         });
 
-        return {
-          success: true,
-          message: 'Password reset email sent',
-        };
-      } catch (error: any) {
-        console.error('Password reset error:', error);
-        set.status = error.status || 400;
-        return {
-          success: false,
-          message: error.message || 'Failed to send password reset email',
-        };
-      }
-    },
-    {
-      body: t.Object({
-        email: t.String({ format: 'email', description: 'User email address' }),
-        redirectTo: t.Optional(t.String({ description: 'URL to redirect after password reset' })),
-      }),
-      response: t.Object({
-        success: t.Boolean(),
-        message: t.String(),
-      }),
-      detail: {
-        summary: 'Forget Password',
-        description: 'Request a password reset email',
-        tags: ['Authentication'],
-      },
-    },
-  )
-
-  // Reset password with token
-  .post('/reset-password',
-    async ({ body, query, set }) => {
-      try {
-        const result = await auth.api.resetPassword({
-          body: {
-            newPassword: body.newPassword,
-            token: body.token || (query?.token as string),
-          },
-          query: {
-            token: query?.token as string,
-          },
-        });
-
-        return {
-          success: true,
-          message: 'Password reset successful',
-        };
-      } catch (error: any) {
-        console.error('Password reset error:', error);
-        set.status = error.status || 400;
-        return {
-          success: false,
-          message: error.message || 'Failed to reset password',
-        };
-      }
-    },
-    {
-      body: t.Object({
-        newPassword: t.String({ minLength: 8, description: 'New password' }),
-        token: t.Optional(t.String({ description: 'Reset token (if not provided in query)' })),
-      }),
-      query: t.Optional(t.Object({
-        token: t.Optional(t.String({ description: 'Reset token' })),
-      })),
-      response: t.Object({
-        success: t.Boolean(),
-        message: t.String(),
-      }),
-      detail: {
-        summary: 'Reset Password',
-        description: 'Reset password with token',
-        tags: ['Authentication'],
-      },
-    },
-  )
-
-  // Verify email
-  .get("/verify-email",
-    async ({ query, set }) => {
-      try {
-        const result = await auth.api.verifyEmail({
-          query: {
-            token: query.token,
-            callbackURL: query.callbackURL,
-          },
-        });
-
-        // Check if result exists and has expected structure
-        if (!result) {
+        if (!session) {
           return {
-            success: true,
-            message: "Email verification processed",
+            success: false,
+            message: "No active session",
           };
         }
 
         return {
           success: true,
-          message: "Email verified successfully",
+          message: "Session retrieved",
           data: {
-            user: result.user ? {
-              id: result.user.id,
-              email: result.user.email,
-              name: result.user.name,
-              // firstName: result.user.firstName,
-              // lastName: result.user.lastName,
-              // plan: result.user.plan,
-              image: result.user.image,
-              emailVerified: result.user.emailVerified,
-            } : undefined,
-            status: result.status
+            user: session.user ? {
+              id: session.user.id,
+              email: session.user.email,
+              name: session.user.name,
+              image: session.user.image,
+              emailVerified: session.user.emailVerified,
+            } : undefined
           }
         };
       } catch (error: any) {
-        console.error("Email verification error:", error);
-        set.status = error.status || 400;
+        console.error("Session error:", error);
+        set.status = error.status || 401;
         return {
           success: false,
-          message: error.message || "Failed to verify email",
+          message: error.message || "Failed to retrieve session",
         };
       }
     },
     {
-      query: t.Object({
-        token: t.String({ description: 'Verification token' }),
-        callbackURL: t.Optional(t.String({ description: 'URL to redirect after verification' })),
-      }),
       response: authResponseSchema,
       detail: {
-        summary: 'Verify Email',
-        description: 'Verify email address with token',
+        summary: 'Get Session',
+        description: 'Get the current user session',
         tags: ['Authentication'],
-      },
-    },
-  )
-
-  // Send verification email
-  .post('/send-verification-email',
-    async ({ body, set }) => {
-      try {
-        const result = await auth.api.sendVerificationEmail({
-          body: {
-            email: body.email,
-            callbackURL: body.callbackURL,
-          },
-        });
-
-        return {
-          success: true,
-          message: 'Verification email sent',
-        };
-      } catch (error: any) {
-        console.error('Send verification email error:', error);
-        set.status = error.status || 400;
-        return {
-          success: false,
-          message: error.message || 'Failed to send verification email',
-        };
-      }
-    },
-    {
-      body: t.Object({
-        email: t.String({ format: 'email', description: 'User email address' }),
-        callbackURL: t.Optional(t.String({ description: 'URL to redirect after verification' })),
-      }),
-      response: t.Object({
-        success: t.Boolean(),
-        message: t.String(),
-      }),
-      detail: {
-        summary: 'Send Verification Email',
-        description: 'Send a verification email to the user',
-        tags: ['Authentication'],
+        security: [{ CookieAuth: [] }],
       },
     },
   );
+
+export default authRoutes;

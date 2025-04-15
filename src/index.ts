@@ -2,9 +2,6 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { cookie } from '@elysiajs/cookie';
 import { swagger } from '@elysiajs/swagger';
-import { profileRoutes } from './routes/profile.routes';
-import { userRoutes } from './routes/user.routes';
-import { errorHandler } from './middleware/error-handler';
 import betterAuthView from './libs/auth/auth-view';
 import { version } from '../package.json';
 
@@ -30,49 +27,16 @@ const app = new Elysia()
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
   }))
-  .use(cookie())
-  .use(errorHandler)
 
   // Swagger documentation
-  .use(
-    swagger({
-      path: '/docs',
-      documentation: {
-        info: {
-          title: 'User Authentication API',
-          version,
-          description: 'API for user authentication and profile management with BetterAuth',
-        },
-        tags: [
-          { name: 'Authentication', description: 'Authentication endpoints including email and social providers' },
-          { name: 'Profile', description: 'User profile management' },
-        ],
-        components: {
-          securitySchemes: {
-            CookieAuth: {
-              type: 'apiKey',
-              in: 'cookie',
-              name: 'better_auth_session',
-              description: 'BetterAuth session cookie',
-            },
-          },
-        },
-      },
-    }),
-  )
-  
-  // Mount user routes
-  .use(userRoutes)
+  .use(swagger())
 
-  // Mount profile routes
-  .use(profileRoutes)
-
-  // BetterAuth handler for all auth routes
+  // BetterAuth handler for auth routes
   .all('/api/auth/*', betterAuthView)
 
   // Base route
   .get('/', () => ({
-    name: 'User Authentication API',
+    name: 'Norcha API',
     version,
     status: 'running',
     documentation: '/docs',
@@ -85,17 +49,6 @@ const app = new Elysia()
 console.log(`🚀 Server is running at ${app.server?.hostname}:${app.server?.port}`);
 console.log(`📚 API Documentation: http://localhost:${PORT}/docs`);
 console.log(`🔐 Auth Endpoints: http://localhost:${PORT}/api/auth`);
-console.log(`
-📝 Test email sign-up with:
-curl -X POST http://localhost:${PORT}/api/auth/sign-up/email \\
-  -H "Content-Type: application/json" \\
-  -d '{"email":"test@example.com","password":"password123","name":"Test User"}'
-
-🔑 Test Google sign-in with:
-curl -X POST http://localhost:${PORT}/api/auth/sign-in/google \\
-  -H "Content-Type: application/json" \\
-  -d '{"callbackURL":"http://localhost:${PORT}/auth-callback","disableRedirect":true}'
-`);
 
 // For hot module reloading during development
 export type App = typeof app;

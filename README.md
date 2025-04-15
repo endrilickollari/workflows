@@ -1,27 +1,14 @@
-# User Management API
+# BetterAuth with Elysia
 
-A robust and well-structured CRUD API for user management using Bun, Elysia, Drizzle ORM (SQLite), and authentication.
+A clean implementation of BetterAuth in an Elysia application.
 
 ## Features
 
-- 🔐 User authentication (signup/login)
-- 👤 User management (CRUD operations)
-- 🔍 Role-based access control (admin vs regular users)
+- 🔐 User authentication with email/password and social providers (Google, GitHub)
+- 👤 User profile management
 - 📝 User plans (Free, Basic, Premium)
-- 🛢️ SQLite database with Drizzle ORM
-- 🧩 Modular architecture
-- 📏 ESLint and Prettier for code quality
-
-## Project Structure
-
-The application follows a clean, modular architecture separating concerns:
-
-- **Controllers**: Handle HTTP requests and responses
-- **Services**: Implement business logic
-- **Repositories**: Manage database interactions
-- **Middleware**: Provide cross-cutting concerns (auth, error handling)
-- **Routes**: Define API endpoints
-- **Utils**: Shared utilities and helpers
+- 🛢️ SQLite database with BetterAuth integration
+- 📚 API documentation with Swagger
 
 ## Getting Started
 
@@ -31,25 +18,36 @@ The application follows a clean, modular architecture separating concerns:
 
 ### Installation
 
-1. Clone the repository:
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/workflows.git
-cd workflows
-```
-
-2. Install dependencies:
+1. Clone the repository and install dependencies:
 
 ```bash
 bun install
 ```
 
-3. Initialize the database (creates tables based on schema):
+2. Set up environment variables:
+
+Create a `.env` file with the following:
+
+```env
+PORT=3000
+BETTER_AUTH_SECRET=your-secret-key
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+```
+
+3. Initialize the database:
 
 ```bash
-bun run db:generate
+# Generate BetterAuth schema and tables
+bun run db:better-auth
+
+# Run database migrations
 bun run db:migrate
+
+# Setup the database (runs both of the above)
+bun run db:setup
 ```
 
 4. Start the development server:
@@ -64,25 +62,22 @@ The API will be available at http://localhost:3000.
 
 ### Authentication
 
-- **POST /api/auth/signup**: Register a new user
-- **POST /api/auth/login**: User login
+- **POST /api/auth/sign-up/email**: Register a new user
+- **POST /api/auth/sign-in/email**: User login with email/password
+- **POST /api/auth/sign-in/google**: Login with Google
+- **POST /api/auth/sign-in/github**: Login with GitHub
+- **POST /api/auth/sign-out**: Log out
+- **GET /api/auth/session**: Get current session
+- **POST /api/auth/forget-password**: Request password reset
+- **POST /api/auth/reset-password**: Reset password with token
+- **GET /api/auth/verify-email**: Verify email address
+- **POST /api/auth/send-verification-email**: Send verification email
 
-### User Management (Admin Only)
+### User Profile
 
-- **POST /api/admin/users**: Create a new user
-- **GET /api/admin/users**: Get all users
-- **GET /api/admin/users/:id**: Get a specific user
-- **PUT /api/admin/users/:id**: Update a specific user
-- **DELETE /api/admin/users/:id**: Delete a specific user
-
-## Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
-
-```env
-PORT=3000
-JWT_SECRET=your-secret-key
-```
+- **GET /api/profile**: Get user profile
+- **PUT /api/profile**: Update user profile
+- **PUT /api/profile/password**: Update user password
 
 ## Development
 
