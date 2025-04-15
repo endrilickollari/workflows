@@ -9,7 +9,6 @@ export interface JwtPayload {
   id: number;
   email: string;
   plan: string;
-  isAdmin: boolean;
   iat?: number;
   exp?: number;
 }
@@ -43,7 +42,6 @@ export interface CreateUserDto {
   firstName?: string;
   lastName?: string;
   plan?: string;
-  isAdmin?: boolean;
 }
 
 // User update request
@@ -53,7 +51,6 @@ export interface UpdateUserDto {
   firstName?: string;
   lastName?: string;
   plan?: string;
-  isAdmin?: boolean;
 }
 
 /**

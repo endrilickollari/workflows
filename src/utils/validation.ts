@@ -39,24 +39,22 @@ export const loginSchema = z.object({
   password: z.string(),
 });
 
-// Admin create user validation schema
+// User create validation schema
 export const createUserSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   firstName: z.string().max(100).optional(),
   lastName: z.string().max(100).optional(),
   plan: planSchema.optional().default(USER_PLANS.FREE),
-  isAdmin: z.boolean().optional().default(false),
 });
 
-// Admin update user validation schema
+// User update validation schema
 export const updateUserSchema = z.object({
   email: emailSchema.optional(),
   password: passwordSchema.optional(),
   firstName: z.string().max(100).optional(),
   lastName: z.string().max(100).optional(),
   plan: planSchema.optional(),
-  isAdmin: z.boolean().optional(),
 });
 
 /**

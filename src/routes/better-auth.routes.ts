@@ -7,19 +7,24 @@ export const betterAuthRoutes = new Elysia({ prefix: '/auth' })
   .post(
     '/sign-up/email',
     async ({ body, set }) => {
-      console.log('Processing signup request:', body);
+      console.log('Processing signup request:', { 
+        email: body.email
+      });
+      
       try {
+        // Prepare body with required name field
+        const authBody = {
+          email: body.email,
+          password: body.password,
+          name: body.name || body.email.split('@')[0], // Default name if not provided
+          firstName: body.firstName,
+          lastName: body.lastName,
+          plan: body.plan
+        };
+        
         // The signUpEmail method expects a context with body field
         const result = await auth.api.signUpEmail({
-          body: {
-            name: body.name || `${body.firstName || ''} ${body.lastName || ''}`.trim() || 'User',
-            email: body.email,
-            password: body.password,
-            // Pass any additional fields
-            ...(body.firstName ? { firstName: body.firstName } : {}),
-            ...(body.lastName ? { lastName: body.lastName } : {}),
-            ...(body.plan ? { plan: body.plan } : {}),
-          },
+          body: authBody,
         });
 
         return result;
@@ -27,7 +32,7 @@ export const betterAuthRoutes = new Elysia({ prefix: '/auth' })
         console.error('Signup error:', error);
         set.status = error.status || 500;
         return {
-          error: error.message || 'An error occurred during signup',
+          error: error.message || 'Failed to create user',
           status: error.status || 500,
         };
       }

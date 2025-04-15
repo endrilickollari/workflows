@@ -9,7 +9,7 @@ export const UserPlan = {
 } as const;
 export type UserPlan = (typeof UserPlan)[keyof typeof UserPlan];
 
-// User table schema
+// User table schema - removed isAdmin
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   email: text('email').notNull().unique(),
@@ -19,7 +19,7 @@ export const users = sqliteTable('users', {
   plan: text('plan', { enum: Object.values(UserPlan) as [string, ...string[]] })
     .notNull()
     .default(UserPlan.FREE),
-  isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+  // Removed isAdmin field
   createdAt: text('created_at')
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),

@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import { Database } from 'bun:sqlite';
 import * as schema from './schema';
 
-// Create a new SQLite database connection
+// Create a new SQLite database connection using Bun's built-in SQLite
 const sqlite = new Database('data.db');
 
 // Create a Drizzle instance with the database and schema

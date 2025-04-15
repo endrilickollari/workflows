@@ -7,20 +7,31 @@ export class UserService {
    * Create a new user (admin operation)
    */
   async createUser(userData: Omit<NewUser, 'createdAt' | 'updatedAt'>): Promise<User> {
-    // Check if user already exists
-    const existingUser = await userRepository.findByEmail(userData.email);
-    if (existingUser) {
-      throw new Error('User with this email already exists');
+    try {
+      console.log('Creating user with data:', { ...userData, password: '[REDACTED]' });
+      // Check if user already exists
+      const existingUser = await userRepository.findByEmail(userData.email);
+      if (existingUser) {
+        throw new Error('User with this email already exists');
+      }
+
+      // Hash the password
+      const hashedPassword = await hashPassword(userData.password);
+
+      // Create the user with hashed password
+      const newUserData = {
+        ...userData,
+        password: hashedPassword,
+      };
+      console.log('Prepared user data:', { ...newUserData, password: '[REDACTED]' });
+      
+      const user = await userRepository.create(newUserData);
+      console.log('User created successfully:', user.id);
+      return user;
+    } catch (error) {
+      console.error('Error creating user in service layer:', error);
+      throw error;
     }
-
-    // Hash the password
-    const hashedPassword = await hashPassword(userData.password);
-
-    // Create the user with hashed password
-    return await userRepository.create({
-      ...userData,
-      password: hashedPassword,
-    });
   }
 
   /**

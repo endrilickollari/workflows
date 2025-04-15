@@ -16,7 +16,6 @@ export const ERROR_MESSAGES = {
   INVALID_CREDENTIALS: 'Invalid email or password',
   INVALID_PLAN: 'Invalid plan type',
   UNAUTHORIZED: "Unauthorized: You don't have permission to access this resource",
-  ADMIN_REQUIRED: 'Admin access required',
 };
 
 // Success messages

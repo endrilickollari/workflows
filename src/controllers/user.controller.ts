@@ -8,7 +8,7 @@ export interface CreateUserRequest {
   firstName?: string;
   lastName?: string;
   plan?: string;
-  isAdmin?: boolean;
+  // Removed isAdmin field
 }
 
 export interface UpdateUserRequest {
@@ -17,12 +17,12 @@ export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
   plan?: string;
-  isAdmin?: boolean;
+  // Removed isAdmin field
 }
 
 export class UserController {
   /**
-   * Create a new user (admin operation)
+   * Create a new user
    */
   async createUser(request: CreateUserRequest) {
     try {
@@ -34,13 +34,14 @@ export class UserController {
         };
       }
 
-      const userData: Partial<NewUser> = {
-        email: request.email,
-        password: request.password,
-        firstName: request.firstName,
-        lastName: request.lastName,
-        plan: request.plan || USER_PLANS.FREE,
-        isAdmin: request.isAdmin || false,
+      // Create required fields and cast additional ones appropriately
+      // Handle empty strings for optional fields
+      const userData: Omit<NewUser, 'createdAt' | 'updatedAt'> = {
+        email: request.email, // Required
+        password: request.password, // Required
+        firstName: request.firstName || null,
+        lastName: request.lastName || null,
+        plan: request.plan && request.plan.trim() !== '' ? request.plan : USER_PLANS.FREE,
       };
 
       const newUser = await userService.createUser(userData);
@@ -53,13 +54,13 @@ export class UserController {
           firstName: newUser.firstName,
           lastName: newUser.lastName,
           plan: newUser.plan,
-          isAdmin: newUser.isAdmin,
           createdAt: newUser.createdAt,
           updatedAt: newUser.updatedAt,
         },
         message: SUCCESS_MESSAGES.USER_CREATED,
       };
     } catch (error) {
+      console.error('Create user error:', error); // Add debugging
       return {
         success: false,
         message: error instanceof Error ? error.message : ERROR_MESSAGES.USER_EXISTS,
@@ -68,7 +69,7 @@ export class UserController {
   }
 
   /**
-   * Get all users (admin operation)
+   * Get all users
    */
   async getAllUsers() {
     try {
@@ -82,7 +83,6 @@ export class UserController {
           firstName: user.firstName,
           lastName: user.lastName,
           plan: user.plan,
-          isAdmin: user.isAdmin,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         })),
@@ -97,7 +97,7 @@ export class UserController {
   }
 
   /**
-   * Get user by ID (admin operation)
+   * Get user by ID
    */
   async getUserById(id: number) {
     try {
@@ -111,7 +111,6 @@ export class UserController {
           firstName: user.firstName,
           lastName: user.lastName,
           plan: user.plan,
-          isAdmin: user.isAdmin,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },
@@ -126,7 +125,7 @@ export class UserController {
   }
 
   /**
-   * Update user (admin operation)
+   * Update user
    */
   async updateUser(id: number, request: UpdateUserRequest) {
     try {
@@ -143,8 +142,7 @@ export class UserController {
         password: request.password,
         firstName: request.firstName,
         lastName: request.lastName,
-        plan: request.plan,
-        isAdmin: request.isAdmin,
+        plan: request.plan && request.plan.trim() !== '' ? request.plan : undefined,
       };
 
       // Filter out undefined properties
@@ -164,7 +162,6 @@ export class UserController {
           firstName: updatedUser.firstName,
           lastName: updatedUser.lastName,
           plan: updatedUser.plan,
-          isAdmin: updatedUser.isAdmin,
           createdAt: updatedUser.createdAt,
           updatedAt: updatedUser.updatedAt,
         },
@@ -179,7 +176,7 @@ export class UserController {
   }
 
   /**
-   * Delete user (admin operation)
+   * Delete user
    */
   async deleteUser(id: number) {
     try {

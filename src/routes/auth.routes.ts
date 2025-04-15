@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
-import { auth } from '@/libs/auth/auth';
-import { userInfo } from '@/middleware/auth';
+import { auth } from '../libs/auth/auth' ;
+import { userInfo } from '../middleware/auth';
 
 // Define response schemas for Swagger documentation
 const userResponseSchema = t.Object({
@@ -11,7 +11,6 @@ const userResponseSchema = t.Object({
   name: t.String({ description: 'User display name' }),
   emailVerified: t.Boolean({ description: 'Email verification status' }),
   plan: t.Optional(t.String({ description: 'User subscription plan' })),
-  isAdmin: t.Optional(t.Boolean({ description: 'Admin status' })),
   image: t.Optional(t.Union([t.String(), t.Null()], { description: 'User profile image URL' })),
 });
 
@@ -32,41 +31,57 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
   .post('/sign-up/email',
     async ({ body, set }) => {
       try {
-        const result = await auth.api.signUpEmail({
-          body: {
-            name: body.name || `${body.firstName || ''} ${body.lastName || ''}`.trim() || 'User',
+        console.log('Sign-up attempt:', { 
+          email: body.email,
+          name: body.name || body.email.split('@')[0] // Use part of email as fallback name
+        });
+        
+        try {
+          // Create a properly formatted body with required fields
+          const authBody = {
             email: body.email,
             password: body.password,
+            name: body.name || body.email.split('@')[0], // Default name if not provided
+            // Include optional fields if needed
             firstName: body.firstName,
             lastName: body.lastName,
-            plan: body.plan,
-          },
-        });
+            plan: body.plan
+          };
+          
+          // Use BetterAuth for signup
+          const result = await auth.api.signUpEmail({
+            body: authBody,
+          });
 
-        return {
-          success: true,
-          message: 'User registered successfully',
-          data: {
-            user: result.user ? {
-              id: result.user.id,
-              email: result.user.email,
-              name: result.user.name,
-              // firstName: result.user.firstName,
-              // lastName: result.user.lastName,
-              // plan: result.user.plan,
-              // isAdmin: result.user.isAdmin,
-              image: result.user.image,
-              emailVerified: result.user.emailVerified,
-            } : undefined,
-            token: result.token || undefined,
-          },
-        };
+          console.log('User created successfully with BetterAuth:', result.user?.id);
+          
+          return {
+            success: true,
+            message: 'User registered successfully',
+            data: {
+              user: result.user ? {
+                id: result.user.id,
+                email: result.user.email,
+                name: result.user.name,
+                image: result.user.image,
+                emailVerified: result.user.emailVerified,
+              } : undefined,
+              token: result.token || undefined,
+            },
+          };
+        } catch (error) {
+          // Log the error
+          console.error('BetterAuth signup error:', error);
+          
+          // Re-throw the error to be handled by the outer catch block
+          throw error;
+        }
       } catch (error: any) {
-        console.error('Signup error:', error);
+        console.error('Signup failed:', error);
         set.status = error.status || 400;
         return {
           success: false,
-          message: error.message || 'Registration failed',
+          message: error.body?.message || error.message || 'Failed to create user',
         };
       }
     },
@@ -112,7 +127,6 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
               // firstName: result.user.firstName,
               // lastName: result.user.lastName,
               // plan: result.user.plan,
-              // isAdmin: result.user.isAdmin,
               image: result.user.image,
               emailVerified: result.user.emailVerified,
             } : undefined,
@@ -181,7 +195,6 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
               // firstName: result.user.firstName,
               // lastName: result.user.lastName,
               // plan: result.user.plan,
-              // isAdmin: result.user.isAdmin,
               image: result.user.image,
               emailVerified: result.user.emailVerified,
             } : undefined,
@@ -247,7 +260,6 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
               // firstName: result.user.firstName,
               // lastName: result.user.lastName,
               // plan: result.user.plan,
-              // isAdmin: result.user.isAdmin,
               image: result.user.image,
               emailVerified: result.user.emailVerified,
             } : undefined,
@@ -303,7 +315,6 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
               // firstName: session.user.firstName,
               // lastName: session.user.lastName,
               // plan: session.user.plan,
-              // isAdmin: session.user.isAdmin,
               image: session.user.image,
               emailVerified: session.user.emailVerified,
             } : undefined,
@@ -371,49 +382,6 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
       },
     },
   )
-
-  // OAuth callback handler (must be at the path that matches BetterAuth config)
-  // .all('/callback/:id',
-  //   async ({ params, query, body, request, set }) => {
-  //     try {
-  //       await auth.api.callbackOAuth({
-  //         params: { id: params.id },
-  //         query: query,
-  //         body: body || {},
-  //         headers: request.headers,
-  //       });
-  //
-  //       // Redirect happens internally in BetterAuth
-  //       return {
-  //         success: true,
-  //         message: 'Authentication successful',
-  //       };
-  //     } catch (error: any) {
-  //       console.error('OAuth callback error:', error);
-  //       set.status = error.status || 500;
-  //       return {
-  //         success: false,
-  //         message: error.message || 'Authentication failed',
-  //       };
-  //     }
-  //   },
-  //   {
-  //     params: t.Object({
-  //       id: t.String({ description: 'Provider ID' }),
-  //     }),
-  //     query: t.Object({
-  //       code: t.Optional(t.String()),
-  //       state: t.Optional(t.String()),
-  //       error: t.Optional(t.String()),
-  //       error_description: t.Optional(t.String()),
-  //     }),
-  //     detail: {
-  //       summary: 'OAuth Callback',
-  //       description: 'Handle OAuth provider callback',
-  //       tags: ['Authentication'],
-  //     },
-  //   },
-  // )
 
   // Reset password request
   .post('/forget-password',
@@ -533,7 +501,6 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
               // firstName: result.user.firstName,
               // lastName: result.user.lastName,
               // plan: result.user.plan,
-              // isAdmin: result.user.isAdmin,
               image: result.user.image,
               emailVerified: result.user.emailVerified,
             } : undefined,

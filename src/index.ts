@@ -2,10 +2,10 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { cookie } from '@elysiajs/cookie';
 import { swagger } from '@elysiajs/swagger';
+import { profileRoutes } from './routes/profile.routes';
 import { userRoutes } from './routes/user.routes';
-import { authRoutes } from './routes/auth.routes';
 import { errorHandler } from './middleware/error-handler';
-import { auth } from './libs/auth/auth';
+import betterAuthView from './libs/auth/auth-view';
 import { version } from '../package.json';
 
 // Define port
@@ -14,12 +14,6 @@ const PORT = process.env.PORT || 3000;
 // Logger plugin
 const logger = new Elysia()
   .onRequest(({ request }) => {
-    console.log(`${new Date().toISOString()} | ${request.method} ${request.url}`);
-  })
-  .onAfterHandle(({ request, set }) => {
-    console.log(`${new Date().toISOString()} | ${request.method} ${request.url} | ${set.status || 200}`);
-  })
-  .onAfterResponse(({ request, set }) => {
     console.log(`${new Date().toISOString()} | ${request.method} ${request.url}`);
   })
   .onError(({ request, error }) => {
@@ -45,22 +39,16 @@ const app = new Elysia()
       path: '/docs',
       documentation: {
         info: {
-          title: 'User Management API',
+          title: 'User Authentication API',
           version,
-          description: 'API for user management with enhanced authentication options',
+          description: 'API for user authentication and profile management with BetterAuth',
         },
         tags: [
           { name: 'Authentication', description: 'Authentication endpoints including email and social providers' },
-          { name: 'User Management', description: 'User CRUD operations (admin only)' },
+          { name: 'Profile', description: 'User profile management' },
         ],
         components: {
           securitySchemes: {
-            BearerAuth: {
-              type: 'http',
-              scheme: 'bearer',
-              bearerFormat: 'JWT',
-              description: 'Enter your JWT token in the format: Bearer {token}',
-            },
             CookieAuth: {
               type: 'apiKey',
               in: 'cookie',
@@ -72,22 +60,19 @@ const app = new Elysia()
       },
     }),
   )
-
-  // Mount auth routes
-  .use(authRoutes)
-
-  // Mount user management routes
+  
+  // Mount user routes
   .use(userRoutes)
 
-  // BetterAuth handler for all other auth routes not explicitly defined
-  .all('/api/auth/*', async ({ request }) => {
-    console.log(`Passing request to BetterAuth handler: ${request.method} ${request.url}`);
-    return auth.handler(request);
-  })
+  // Mount profile routes
+  .use(profileRoutes)
+
+  // BetterAuth handler for all auth routes
+  .all('/api/auth/*', betterAuthView)
 
   // Base route
   .get('/', () => ({
-    name: 'User Management API',
+    name: 'User Authentication API',
     version,
     status: 'running',
     documentation: '/docs',
@@ -100,6 +85,17 @@ const app = new Elysia()
 console.log(`🚀 Server is running at ${app.server?.hostname}:${app.server?.port}`);
 console.log(`📚 API Documentation: http://localhost:${PORT}/docs`);
 console.log(`🔐 Auth Endpoints: http://localhost:${PORT}/api/auth`);
+console.log(`
+📝 Test email sign-up with:
+curl -X POST http://localhost:${PORT}/api/auth/sign-up/email \\
+  -H "Content-Type: application/json" \\
+  -d '{"email":"test@example.com","password":"password123","name":"Test User"}'
+
+🔑 Test Google sign-in with:
+curl -X POST http://localhost:${PORT}/api/auth/sign-in/google \\
+  -H "Content-Type: application/json" \\
+  -d '{"callbackURL":"http://localhost:${PORT}/auth-callback","disableRedirect":true}'
+`);
 
 // For hot module reloading during development
 export type App = typeof app;

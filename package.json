@@ -9,11 +9,14 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "bun run src/db/generate-schema.ts",
     "db:migrate": "bun run src/db/migrate.ts",
-    "db:setup": "bun run src/db/setup.ts"
+    "db:setup": "bun run db:generate && bun run db:migrate",
+    "db:reset": "rm -f data.db && bun run db:setup",
+    "setup": "bun install && bun run db:setup"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.0",
     "@elysiajs/cookie": "^0.8.0",
     "@elysiajs/cors": "1.2.0",
     "@elysiajs/jwt": "1.2.0",
@@ -22,7 +25,7 @@
     "better-sqlite3": "^11.9.1",
     "drizzle-orm": "0.41.0",
     "elysia": "1.2.25",
-    "zod": "^3.22.4"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@better-auth/cli": "^1.2.5",
