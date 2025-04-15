@@ -1,5 +1,47 @@
+/**
+ * Script to generate BetterAuth schema for Drizzle
+ */
+import { execSync } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+
+console.log('🔄 Generating BetterAuth schema for Drizzle...');
+
+try {
+  // Ensure output directory exists
+  const schemaDir = path.join(process.cwd(), 'drizzle');
+  if (!fs.existsSync(schemaDir)) {
+    fs.mkdirSync(schemaDir, { recursive: true });
+  }
+
+  // Set environment variables to influence the schema generation
+  process.env.BETTER_AUTH_ADAPTER = 'drizzle';
+  process.env.BETTER_AUTH_DB_PROVIDER = 'pg';
+  
+  // Run the BetterAuth CLI generate command
+  const command = 'npx @better-auth/cli generate';
+  console.log(`Executing: ${command}`);
+  
+  const output = execSync(command, { 
+    encoding: 'utf-8',
+    env: { 
+      ...process.env,
+      BETTER_AUTH_ADAPTER: 'drizzle',
+      BETTER_AUTH_DB_PROVIDER: 'pg'
+    }
+  });
+  console.log(output);
+  
+  console.log('✅ Schema generated successfully!');
+  console.log('Next step: Run migrations with "bun run db:migrate"');
+} catch (error) {
+  console.error('❌ Failed to generate schema:', error);
+  
+  // Fallback: Create schema directly
+  console.log('Attempting to generate schema directly...');
+  try {
+    const schemaContent = `
 import { pgTable, text, boolean, timestamp } from 'drizzle-orm/pg-core';
-import { type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 
 // Users table - match BetterAuth's standard schema
 export const users = pgTable('user', {
@@ -49,11 +91,13 @@ export const verifications = pgTable('verification', {
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow()
-});
+});`;
 
-// Export types
-export type User = InferSelectModel<typeof users>;
-export type NewUser = InferInsertModel<typeof users>;
-export type Session = InferSelectModel<typeof sessions>;
-export type Account = InferSelectModel<typeof accounts>;
-export type Verification = InferSelectModel<typeof verifications>;
+    // Write schema directly to the libs/auth/schema.ts file
+    fs.writeFileSync(path.join(process.cwd(), 'src', 'libs', 'auth', 'schema.ts'), schemaContent);
+    console.log('✅ Schema created directly.');
+  } catch (fallbackError) {
+    console.error('❌ Fallback also failed:', fallbackError);
+    process.exit(1);
+  }
+}

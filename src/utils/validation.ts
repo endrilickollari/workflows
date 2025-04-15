@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { USER_PLANS } from './constants';
 
 /**
  * Validation schemas for API requests
@@ -18,45 +17,26 @@ export const passwordSchema = z
   .min(6, 'Password must be at least 6 characters')
   .max(100, 'Password must be less than 100 characters');
 
-// User plan validation schema
-export const planSchema = z.enum([USER_PLANS.FREE, USER_PLANS.BASIC, USER_PLANS.PREMIUM] as [
-  string,
-  ...string[],
-]);
-
-// User signup validation schema
-export const signupSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  firstName: z.string().max(100).optional(),
-  lastName: z.string().max(100).optional(),
-  plan: planSchema.optional().default(USER_PLANS.FREE),
-});
-
 // User login validation schema
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string(),
 });
 
-// Admin create user validation schema
+// User create validation schema
 export const createUserSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  firstName: z.string().max(100).optional(),
-  lastName: z.string().max(100).optional(),
-  plan: planSchema.optional().default(USER_PLANS.FREE),
-  isAdmin: z.boolean().optional().default(false),
+  name: z.string().max(100).optional(),
+  image: z.string().url().optional(),
 });
 
-// Admin update user validation schema
+// User update validation schema
 export const updateUserSchema = z.object({
   email: emailSchema.optional(),
   password: passwordSchema.optional(),
-  firstName: z.string().max(100).optional(),
-  lastName: z.string().max(100).optional(),
-  plan: planSchema.optional(),
-  isAdmin: z.boolean().optional(),
+  name: z.string().max(100).optional(),
+  image: z.string().url().optional(),
 });
 
 /**
